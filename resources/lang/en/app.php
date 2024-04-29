@@ -15,12 +15,16 @@ return [
     'type' => 'Type',
     'total' => 'Total',
     'count' => 'Count',
+    'all' => 'All',
     'remark' => 'Remark',
     'level' => 'Level',
     'not_available' => 'Not Available',
     'system' => 'System',
     'home' => 'Home',
     'public_home' => 'Public Home',
+    'left_part' => 'Left Part',
+    'mid_part' => 'Mid Part',
+    'right_part' => 'Right Part',
 
     // Action
     'add' => 'Add',

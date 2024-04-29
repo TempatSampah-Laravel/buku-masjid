@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Facades\App\Helpers\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,6 +28,7 @@ class MasjidProfileTest extends TestCase
         $this->submitForm(__('masjid_profile.update'), [
             'masjid_name' => 'Masjid Ar-Rahman',
             'masjid_address' => 'Jln. Kalimantan, No. 20, Kota Banjarmasin',
+            'masjid_city_name' => 'Banjarmasin',
             'masjid_google_maps_link' => 'https://maps.app.goo.gl/abcd',
         ]);
 
@@ -42,8 +44,21 @@ class MasjidProfileTest extends TestCase
             'value' => 'Jln. Kalimantan, No. 20, Kota Banjarmasin',
         ]);
         $this->seeInDatabase('settings', [
+            'key' => 'masjid_city_name',
+            'value' => 'Banjarmasin',
+        ]);
+        $this->seeInDatabase('settings', [
             'key' => 'masjid_google_maps_link',
             'value' => 'https://maps.app.goo.gl/abcd',
         ]);
+    }
+
+    /** @test */
+    public function masjid_name_based_masjid_profile_data()
+    {
+        $masjidName = Setting::get('masjid_name', config('masjid.name'));
+
+        $this->visit('/');
+        $this->see($masjidName);
     }
 }

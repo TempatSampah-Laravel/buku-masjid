@@ -15,12 +15,16 @@ return [
     'type' => 'Jenis',
     'total' => 'Total',
     'count' => 'Jumlah',
+    'all' => 'Semua',
     'remark' => 'Keterangan',
     'level' => 'Level',
     'not_available' => 'Tidak Tersedia',
     'system' => 'Sistem',
     'home' => 'Beranda',
     'public_home' => 'Beranda Publik',
+    'left_part' => 'Bagian Kiri',
+    'mid_part' => 'Bagian Tengah',
+    'right_part' => 'Bagian Kanan',
 
     // Action
     'create' => 'Input',

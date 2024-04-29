@@ -3,27 +3,30 @@
 namespace App\Helpers;
 
 use App\Models\Setting as SettingModel;
+use Illuminate\Database\Eloquent\Model;
 
 class Setting
 {
     protected $settings;
 
-    protected $userId = null;
+    protected $modelId = null;
+    protected $modelType = null;
 
     public function __construct()
     {
         $this->settings = SettingModel::all();
     }
 
-    public function get(string $key, $default = ''): string | null
+    public function get(string $key, $default = ''): ?string
     {
         $setting = $this->settings->filter(function ($item) use ($key) {
-            if ($this->userId) {
-                return $item->user_id == $this->userId && $item->key == $key;
+            if ($this->modelId && $this->modelType) {
+                return $item->model_id == $this->modelId && $item->model_type == $this->modelType && $item->key == $key;
             }
 
-            return is_null($item->user_id) && $item->key == $key;
+            return is_null($item->model_id) && is_null($item->model_type) && $item->key == $key;
         })->first();
+        $this->clearModel();
 
         if ($setting) {
             return $setting->value;
@@ -32,14 +35,14 @@ class Setting
         return $default;
     }
 
-    public function set(string $key, ?string $value): string | null
+    public function set(string $key, ?string $value): ?string
     {
         $setting = $this->settings->filter(function ($item) use ($key) {
-            if ($this->userId) {
-                return $item->user_id == $this->userId && $item->key == $key;
+            if ($this->modelId && $this->modelType) {
+                return $item->model_id == $this->modelId && $item->model_type == $this->modelType && $item->key == $key;
             }
 
-            return is_null($item->user_id) && $item->key == $key;
+            return is_null($item->model_id) && is_null($item->model_type) && $item->key == $key;
         })->first();
 
         if ($setting) {
@@ -47,23 +50,29 @@ class Setting
             $setting->save();
         } else {
             $setting = new SettingModel();
-            $setting->user_id = $this->userId;
+            $setting->model_id = $this->modelId;
+            $setting->model_type = $this->modelType;
             $setting->key = $key;
             $setting->value = $value;
             $setting->save();
         }
+        $this->clearModel();
 
         return $value;
     }
 
-    public function forUser($user): self
+    public function for(Model $model): self
     {
-        $userModel = config('auth.providers.users.model');
-        if ($user instanceof $userModel) {
-            $user = $user->getKey();
-        }
+        $this->modelId = $model->getKey();
+        $this->modelType = $model->getMorphClass();
 
-        $this->userId = $user;
+        return $this;
+    }
+
+    private function clearModel()
+    {
+        $this->modelId = null;
+        $this->modelType = null;
 
         return $this;
     }
