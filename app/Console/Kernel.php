@@ -19,7 +19,6 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
@@ -27,7 +26,7 @@ class Kernel extends ConsoleKernel
         // Auto backup database.
         $backupCommand = 'db:backup --database=mysql';
         $backupCommand .= ' --destination=local --compression=gzip';
-        $backupCommand .= ' --destinationPath=backup/auto.'.date('Y-m-d_Hi');
+        $backupCommand .= ' --destinationPath=backup/db/auto.'.date('Y-m-d_Hi');
         $schedule->command($backupCommand)->dailyAt('03:00');
     }
 

@@ -2,9 +2,7 @@ version: "3"
 services:
   server:
     restart: unless-stopped
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/buku-masjid/buku-masjid:latest
     ports:
       - "8000:80"
     depends_on:

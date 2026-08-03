@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', __('report.monthly', ['year_month' => $currentMonthEndDate->isoFormat('MMMM Y')]))
+@section('title', __('report.monthly'))
 
 @section('content')
 <htmlpageheader name="wpHeader">
@@ -8,9 +8,14 @@
 
     <h2 class="text-center strong">
         @if (isset(auth()->activeBook()->report_titles['finance_summary']))
-            {{ auth()->activeBook()->report_titles['finance_summary'] }} - {{ $currentMonthEndDate->isoFormat('MMMM Y') }}
+            {{ auth()->activeBook()->report_titles['finance_summary'] }}
         @else
-            {{ __('report.monthly') }} - {{ $currentMonthEndDate->isoFormat('MMMM Y') }}
+            {{ __('report.monthly') }}
+        @endif
+        @if (request('month') != '00')
+            - {{ $currentMonthEndDate->isoFormat('MMMM Y') }}
+        @else
+            - {{ $currentMonthEndDate->isoFormat('Y') }}
         @endif
     </h2>
 </htmlpageheader>
@@ -24,6 +29,14 @@
 <div class="">
     @include('reports.finance._internal_content_summary')
 </div>
+
+@include('reports.finance._pdf_signature_content')
+
+<htmlpagefooter name="wpFooter">
+    @if (Setting::for(auth()->activeBook())->get('has_pdf_page_number') != '0')
+        <div class="text-right">{{ __('report.page') }} {PAGENO}/{nb}</div>
+    @endif
+</htmlpagefooter>
 @endsection
 
 @section('style')
@@ -37,6 +50,7 @@
         margin-header: 40px;
         margin-footer: 40px;
         header: html_wpHeader;
+        footer: html_wpFooter;
     }
 </style>
 @endsection

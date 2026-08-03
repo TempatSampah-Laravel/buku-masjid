@@ -9,7 +9,7 @@ use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable, HasApiTokens, ConstantsGetter;
+    use ConstantsGetter, HasApiTokens, Notifiable;
 
     const ROLE_ADMIN = 1;
     const ROLE_CHAIRMAN = 2;
@@ -22,7 +22,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'api_token', 'role_id',
+        'name', 'email', 'password', 'api_token', 'role_id', 'is_active',
     ];
 
     /**
@@ -51,6 +51,6 @@ class User extends Authenticatable
 
     public function getStatusAttribute()
     {
-        return $this->is_active ? __('app.active') : __('app.in_active');
+        return $this->is_active ? __('app.active') : __('app.inactive');
     }
 }

@@ -10,7 +10,7 @@
     </thead>
     <tbody>
         @if ($lastMonthBalance || auth()->activeBook()->bank_account_id)
-            <tr><td colspan="5">{{ __('transaction.balance') }}</td></tr>
+            <tr><th colspan="5" class="text-left">{{ __('transaction.balance') }}</th></tr>
         @endif
         @if (auth()->activeBook()->bank_account_id)
             <tr>
@@ -27,12 +27,13 @@
                     {{ auth()->activeBook()->bank_account_id ? '2' : '1' }}
                 </td>
                 <td>Sisa saldo per {{ $lastMonthDate->isoFormat('D MMMM Y') }}</td>
-                <td class="text-right text-nowrap">{{ format_number($lastMonthBalance) }}</td>
                 <td class="text-right text-nowrap">-</td>
-                <td class="text-center text-nowrap">&nbsp;</td>
+                <td class="text-right text-nowrap">-</td>
+                <td class="text-right text-nowrap">{{ format_number($lastMonthBalance) }}</td>
             </tr>
         @endif
-        <tr><td colspan="5">{{ __('transaction.income') }}</td></tr>
+        <tr><td colspan="5">&nbsp;</td></tr>
+        <tr><th colspan="5" class="text-left">{{ __('transaction.income') }}</th></tr>
         @php
             $key = 0;
         @endphp
@@ -55,7 +56,7 @@
             @foreach($groupedTransactions[1]->where('category_id', null) as $transaction)
             <tr>
                 <td class="text-center">{{ ++$key }}</td>
-                <td>{{ $transaction->description }}</td>
+                <td>{!! $transaction->date_alert !!} {!! nl2br(htmlentities($transaction->description)) !!}</td>
                 <td class="text-right text-nowrap">{{ format_number($transaction->amount) }}</td>
                 <td class="text-right text-nowrap">-</td>
                 <td class="text-center text-nowrap">&nbsp;</td>
@@ -63,7 +64,7 @@
             @endforeach
         @endif
         <tr><td colspan="5">&nbsp;</td></tr>
-        <tr><td colspan="5">{{ __('transaction.spending') }}</td></tr>
+        <tr><th colspan="5" class="text-left">{{ __('transaction.spending') }}</th></tr>
         @foreach($spendingCategories->sortBy('id')->values() as $key => $spendingCategory)
         <tr>
             <td class="text-center">{{ ++$key }}</td>
@@ -83,7 +84,7 @@
             @foreach($groupedTransactions[0]->where('category_id', null) as $transaction)
             <tr>
                 <td class="text-center">{{ ++$key }}</td>
-                <td>{{ $transaction->description }}</td>
+                <td>{!! $transaction->date_alert !!} {!! nl2br(htmlentities($transaction->description)) !!}</td>
                 <td class="text-right text-nowrap">-</td>
                 <td class="text-right text-nowrap">{{ format_number($transaction->amount) }}</td>
                 <td class="text-center text-nowrap">&nbsp;</td>
@@ -94,16 +95,16 @@
     </tbody>
     @if (!$groupedTransactions->isEmpty())
     <tfoot>
-        <tr class="strong">
+        <tr>
             <td>&nbsp;</td>
             <td class="text-center">
-                {{ auth()->activeBook()->bank_account_id ? 'Selisih' : '' }} Saldo {{ $currentMonthEndDate->isoFormat('D MMMM Y') }}
+                {{ __('transaction.in_out') }} hingga {{ $currentMonthEndDate->isoFormat('D MMMM Y') }}
             </td>
             <td class="text-right">
                 @php
                     $currentMonthIncome = $groupedTransactions->has(1) ? $groupedTransactions[1]->sum('amount') : 0;
                 @endphp
-                {{ format_number($lastMonthBalance + $currentMonthIncome) }}
+                {{ format_number($currentMonthIncome) }}
             </td>
             <td class="text-right">
                 @php
@@ -111,21 +112,46 @@
                 @endphp
                 {{ format_number($currentMonthSpending) }}
             </td>
-            <td class="text-right">
+            <td class="text-right text-nowrap">
+                @php
+                    $currentMonthBalance = $currentMonthIncome - $currentMonthSpending;
+                @endphp
+                {{ format_number($currentMonthBalance) }}
+            </td>
+        </tr>
+        @if (auth()->activeBook()->bank_account_id)
+        <tr>
+            <td>&nbsp;</td>
+            <td class="text-center">Saldo Kas hingga {{ $currentMonthEndDate->isoFormat('D MMMM Y') }}</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td class="text-right text-nowrap">
                 @php
                     $currentMonthBalance = $lastMonthBalance + $currentMonthIncome - $currentMonthSpending;
                 @endphp
                 {{ format_number($currentMonthBalance) }}
             </td>
         </tr>
-        @if (auth()->activeBook()->bank_account_id)
-        <tr class="strong">
+        <tr>
             <td>&nbsp;</td>
-            <td class="text-center">Total saldo akhir per {{ $currentMonthEndDate->isoFormat('D MMMM Y') }}</td>
-            <td class="text-right">-</td>
-            <td class="text-right">-</td>
-            <td class="text-right">
+            <td class="text-center strong">Saldo Kas + Saldo Bank per {{ $currentMonthEndDate->isoFormat('D MMMM Y') }}</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td class="text-right strong text-nowrap">
                 {{ format_number($currentMonthBalance + $lastBankAccountBalanceOfTheMonth->amount) }}
+            </td>
+        </tr>
+        @else
+        <tr>
+            <td>&nbsp;</td>
+            <td class="text-center strong">Total saldo akhir per {{ $currentMonthEndDate->isoFormat('D MMMM Y') }}</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td class="text-right strong text-nowrap">
+                @php
+                    $currentMonthBalance = $lastMonthBalance + $currentMonthIncome - $currentMonthSpending;
+                @endphp
+                {{ format_number($currentMonthBalance) }}
             </td>
         </tr>
         @endif

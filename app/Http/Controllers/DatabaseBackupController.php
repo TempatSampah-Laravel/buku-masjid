@@ -59,8 +59,8 @@ class DatabaseBackupController extends Controller
     {
         $this->authorize('manage_database_backup');
 
-        if (Storage::exists('backup/db/'.$fileName)) {
-            Storage::delete('backup/db/'.$fileName);
+        if (Storage::disk('local')->exists('backup/db/'.$fileName)) {
+            Storage::disk('local')->delete('backup/db/'.$fileName);
         }
 
         flash(__('database_backup.deleted', ['filename' => $fileName]), 'warning');
@@ -72,7 +72,7 @@ class DatabaseBackupController extends Controller
     {
         $this->authorize('manage_database_backup');
 
-        return Storage::download('backup/db/'.$fileName);
+        return Storage::disk('local')->download('backup/db/'.$fileName);
     }
 
     public function restore(string $fileName): RedirectResponse
@@ -97,7 +97,7 @@ class DatabaseBackupController extends Controller
 
         $file = $validatedPayload['backup_file'];
         $fileName = $file->getClientOriginalName();
-        $file->storeAs('backup/db', $fileName);
+        $file->storeAs('backup/db', $fileName, 'local');
 
         flash(__('database_backup.uploaded', ['filename' => $fileName]), 'success');
 

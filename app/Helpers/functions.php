@@ -21,7 +21,6 @@ function flash($message = null, $level = 'info')
 /**
  * Format number to string.
  *
- * @param  float  $number
  * @return string
  */
 function format_number(float $number)
@@ -82,6 +81,29 @@ function get_week_numbers(string $year): array
     return range(0, $lastWeekOfTheYear);
 }
 
+function calculate_folder_size(string $absolutePath)
+{
+    $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+    if ($isWindows) {
+        $cmd = sprintf('powershell -Command "(Get-ChildItem -Path %s -Recurse | Measure-Object -Property Length -Sum).Sum"', escapeshellarg($absolutePath));
+    } else {
+        $cmd = sprintf('du -sk %s | cut -f1', escapeshellarg($absolutePath));
+    }
+
+    $output = trim(shell_exec($cmd));
+
+    if (!is_numeric($output)) {
+        return false;
+    }
+
+    if (!$isWindows) {
+        $output = (int) $output * 1024;
+    }
+
+    return (int) $output;
+}
+
 function format_size_units($bytes)
 {
     if ($bytes >= 1073741824) {
@@ -99,6 +121,26 @@ function format_size_units($bytes)
     }
 
     return $bytes;
+}
+
+// Ref: https://stackoverflow.com/a/11807179
+function convert_to_bytes(string $from): ?int
+{
+    $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    $number = substr($from, 0, -2);
+    $suffix = strtoupper(substr($from, -2));
+
+    // B or no suffix
+    if (is_numeric(substr($suffix, 0, 1))) {
+        return null;
+    }
+
+    $exponent = array_flip($units)[$suffix] ?? null;
+    if ($exponent === null) {
+        return null;
+    }
+
+    return $number * (1024 ** $exponent);
 }
 
 function get_percent($numerator, $denominator)

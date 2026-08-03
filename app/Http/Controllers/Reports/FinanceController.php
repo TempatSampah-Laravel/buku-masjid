@@ -62,12 +62,24 @@ class FinanceController extends Controller
                 return Carbon::parse($request->get('start_date'));
             } else {
                 $startDayInteger = constant('\Carbon\Carbon::'.strtoupper($book->start_week_day_code));
+
                 return Carbon::now()->startOfWeek($startDayInteger);
             }
         }
 
-        $year = $request->get('year', date('Y'));
-        $month = $request->get('month', date('m'));
+        if ($request->has('year') && $request->has('month')) {
+            $year = (int) $request->get('year');
+            $month = $request->get('month');
+            if ($month == '00') {
+                return Carbon::parse($year.'-01-01');
+            }
+            if (!isset(get_months()[$month])) {
+                $month = Carbon::now()->format('m');
+            }
+
+            return Carbon::parse($year.'-'.$month.'-01');
+        }
+
         $yearMonth = $this->getYearMonth();
 
         return Carbon::parse($yearMonth.'-01');
@@ -81,17 +93,54 @@ class FinanceController extends Controller
                 return Carbon::parse($request->get('end_date'));
             } else {
                 $endDayInteger = constant('\Carbon\Carbon::'.strtoupper($book->start_week_day_code));
-                return Carbon::now()->endOfWeek($endDayInteger)->subDay();
+
+                return Carbon::now()->addDay()->endOfWeek($endDayInteger)->subDay();
             }
         }
         if ($request->has('end_date')) {
             return Carbon::parse($request->get('end_date'));
         }
 
-        $year = $request->get('year', date('Y'));
-        $month = $request->get('month', date('m'));
+        if ($request->has('year') && $request->has('month')) {
+            $year = (int) $request->get('year');
+            $month = $request->get('month');
+            if ($month == '00') {
+                if ($year == Carbon::now()->format('Y')) {
+                    return Carbon::now();
+                }
+
+                return Carbon::parse($year.'-12-31');
+            }
+            if (!isset(get_months()[$month])) {
+                $month = Carbon::now()->format('m');
+            }
+
+            if ($year.'-'.$month == Carbon::now()->format('Y-m')) {
+                return now();
+            }
+
+            return Carbon::parse(Carbon::parse($year.'-'.$month.'-10')->format('Y-m-t'));
+        }
+
         $yearMonth = $this->getYearMonth();
 
+        if ($yearMonth == Carbon::now()->format('Y-m')) {
+            return now();
+        }
+
         return Carbon::parse($yearMonth.'-01')->endOfMonth();
+    }
+
+    protected function getWeekLabelsByDateRange(string $startDate, string $endDate, string $startWeekDay)
+    {
+        $dateRangePerWeek = get_date_range_per_week($startDate, $endDate, $startWeekDay);
+
+        $dateRanges = [];
+        foreach ($dateRangePerWeek as $weekNumber => $weekDateRanges) {
+            $dateRangeText = get_date_range_text($weekDateRanges[0], end($weekDateRanges));
+            $dateRanges[$weekNumber] = $dateRangeText;
+        }
+
+        return $dateRanges;
     }
 }

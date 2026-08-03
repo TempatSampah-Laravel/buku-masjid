@@ -1,12 +1,17 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', __('book.edit'))
 
-@section('content')
+@section('content_settings')
 <div class="row justify-content-center">
+    @if (request('action') == 'delete' && $book)
     <div class="col-md-6">
-        @if (request('action') == 'delete' && $book)
         @can('delete', $book)
+            <div class="page-header">
+                <h1 class="page-title">{{ $book->name }}</h1>
+                <div class="page-subtitle">{{ __('book.delete') }}</div>
+                <div class="page-options d-flex"></div>
+            </div>
             <div class="card">
                 <div class="card-header">{{ __('book.delete') }}</div>
                 <div class="card-body">
@@ -50,115 +55,251 @@
                 </div>
             </div>
         @endcan
-        @else
-        <div class="card">
-            <div class="card-header">{{ __('book.edit') }}</div>
-            {{ Form::model($book, ['route' => ['books.update', $book], 'method' => 'patch']) }}
-            <div class="card-body">
-                    {!! FormField::text('name', ['required' => true, 'label' => __('book.name')]) !!}
-                    {!! FormField::textarea('description', ['label' => __('book.description')]) !!}
-                    <div class="row">
-                        <div class="col-md-6">
-                            {!! FormField::select('bank_account_id', $bankAccounts, [
-                                'label' => __('bank_account.bank_account'),
-                                'placeholder' => __('book.no_bank_account'),
-                            ]) !!}
-                        </div>
-                        <div class="col-md-6">
-                            {!! FormField::price('budget', [
-                                'label' => __('book.budget'),
-                                'type' => 'number',
-                                'currency' => config('money.currency_code'),
-                                'step' => number_step()
-                            ]) !!}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {!! FormField::radios('status_id', [
-                                App\Models\Book::STATUS_INACTIVE => __('book.status_inactive'),
-                                App\Models\Book::STATUS_ACTIVE => __('app.active')
-                            ], ['label' => __('app.status')]) !!}
-                        </div>
-                        <div class="col-md-6">
-                            {!! FormField::radios('report_visibility_code', [
-                                App\Models\Book::REPORT_VISIBILITY_PUBLIC => __('category.report_visibility_public'),
-                                App\Models\Book::REPORT_VISIBILITY_INTERNAL => __('category.report_visibility_internal')
-                            ], ['label' => __('category.report_visibility')]) !!}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {!! FormField::select('report_periode_code', [
-                                App\Models\Book::REPORT_PERIODE_IN_MONTHS => __('report.in_months'),
-                                App\Models\Book::REPORT_PERIODE_IN_WEEKS => __('report.in_weeks'),
-                                App\Models\Book::REPORT_PERIODE_ALL_TIME => __('report.all_time'),
-                            ], ['label' => __('report.periode'), 'placeholder' => false]) !!}
-                        </div>
-                        <div class="col-md-6">
-                            {!! FormField::select('start_week_day_code', [
-                                'monday' => __('time.days.monday'),
-                                'tuesday' => __('time.days.tuesday'),
-                                'wednesday' => __('time.days.wednesday'),
-                                'thursday' => __('time.days.thursday'),
-                                'friday' => __('time.days.friday'),
-                                'saturday' => __('time.days.saturday'),
-                                'sunday' => __('time.days.sunday'),
-                            ], ['label' => __('report.start_week_day'), 'placeholder' => false]) !!}
-                        </div>
-                    </div>
-                </div>
-            <div class="card-footer">
-                {{ Form::submit(__('book.update'), ['class' => 'btn btn-success']) }}
-                {{ link_to_route('books.show', __('app.cancel'), [$book], ['class' => 'btn btn-link']) }}
-                @can('delete', $book)
-                    {{ link_to_route('books.edit', __('app.delete'), [$book, 'action' => 'delete'], ['class' => 'btn btn-danger float-right', 'id' => 'del-book-'.$book->id]) }}
-                @endcan
+    </div>
+    @else
+    <div class="col-md-12">
+        <div class="page-header">
+            <h1 class="page-title">{{ $book->name }}</h1>
+            <div class="page-subtitle">{{ __('book.edit') }}</div>
+            <div class="page-options d-flex">
+                {{ link_to_route('books.show', __('book.back_to_show'), [$book], ['class' => 'btn btn-secondary']) }}
             </div>
-            {{ Form::close() }}
+        </div>
+        <div class="row">
+            <div class="col-md-2">@include('books._edit_nav_tabs')</div>
+            <div class="col-md-10">
+                <div class="card">
+                    {{ Form::model($book, ['route' => ['books.update', $book], 'method' => 'patch']) }}
+                    <div class="card-body">
+                        @includeWhen(request('tab') == null, 'books._edit_book_settings')
+                        @includeWhen(request('tab') == 'signatures', 'books._edit_book_signatures')
+                        @includeWhen(request('tab') == 'landing_page', 'books._edit_book_landing_page')
+                    </div>
+                    <div class="card-footer">
+                        {{ Form::submit(__('book.update'), ['class' => 'btn btn-success']) }}
+                        {{ link_to_route('books.show', __('app.cancel'), [$book], ['class' => 'btn btn-link']) }}
+                    </div>
+                    {{ Form::close() }}
+                </div>
+            </div>
         </div>
     </div>
+    @endif
 </div>
-@endif
 @endsection
 
 @section('styles')
     {{ Html::style(url('css/plugins/jquery.datetimepicker.css')) }}
+    {{ Html::style(url('https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.css')) }}
+    {{ Html::style(url('https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-bs4.min.css')) }}
 @endsection
 
 @push('scripts')
     {{ Html::script(url('js/plugins/jquery.datetimepicker.js')) }}
+    {{ Html::script(url('https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.min.js')) }}
+    {{ Html::script(url('js/plugins/noty.js')) }}
+    {{ Html::script(url('https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-bs4.min.js')) }}
 <script>
 (function () {
+    $('#landing_page_content').summernote({
+        tabsize: 2,
+        height: 300
+    });
     $('.date-select').datetimepicker({
         timepicker: false,
         format: 'Y-m-d',
         closeOnDateSelect: true,
         scrollInput: false,
         dayOfWeekStart: 1,
-        inline: true,
     });
 })();
 </script>
-@endpush
-
-@section('styles')
-    {{ Html::style(url('css/plugins/jquery.datetimepicker.css')) }}
-@endsection
-
-@push('scripts')
-    {{ Html::script(url('js/plugins/jquery.datetimepicker.js')) }}
 <script>
-(function () {
-    $('.date-select').datetimepicker({
-        timepicker: false,
-        format: 'Y-m-d',
-        closeOnDateSelect: true,
-        scrollInput: false,
-        dayOfWeekStart: 1,
-        inline: true,
-        scrollMonth: false,
+    var $modalPoster = $('#modal-book-poster');
+    var imagePoster = document.getElementById('poster-image');
+    var cropper;
+
+    $(document).on("change", "#book_poster_image", function(e){
+        var files = e.target.files;
+        var done = function (url) {
+            imagePoster.src = url;
+            $modalPoster.modal('show');
+        };
+        var reader;
+        var file;
+        var url;
+        if (files && files.length > 0) {
+            file = files[0];
+            if (URL) {
+                done(URL.createObjectURL(file));
+            } else if (FileReader) {
+                reader = new FileReader();
+                reader.onload = function (e) {
+                    done(reader.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
     });
-})();
+    $modalPoster.on('shown.bs.modal', function () {
+        cropper = new Cropper(imagePoster, {
+            aspectRatio: 2 / 1,
+            viewMode: 2,
+            preview: '.preview'
+        });
+    }).on('hidden.bs.modal', function () {
+        cropper.destroy();
+        cropper = null;
+    });
+    $("#crop_poster").click(function(){
+        canvas = cropper.getCroppedCanvas({
+            width: 960,
+            height: 480,
+        });
+        canvas.toBlob(function(blob) {
+            url = URL.createObjectURL(blob);
+            var reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = function() {
+                var base64data = reader.result;
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ route('api.books.upload_poster_image', $book)}}",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        '_token': $('meta[name="_token"]').attr('content'),
+                        'image': base64data
+                    },
+                    success: function(data){
+                        var status = 'error';
+                        if (data.image) {
+                            if ($('#book_poster_image_show').length) {
+                                $('#book_poster_image_show').attr('src', data.image);
+                            } else {
+                                $('#book-poster').append(`<img id="book_poster_image_show" class="img-fluid mt-2" src="${data.image}">`);
+                            }
+                            status = 'success';
+                        }
+
+                        noty({
+                            type: status,
+                            layout: 'bottomRight',
+                            text: data.message,
+                            timeout: 3000
+                        });
+
+                        $modalPoster.modal('hide');
+                    },
+                    error : function(data){
+                        var status = 'error';
+                        var errorMessage = data.responseJSON.message;
+                        noty({
+                            type: status,
+                            layout: 'bottomRight',
+                            text: errorMessage,
+                            timeout: false
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+<script>
+    var $modalThumbnail = $('#modal-book-thumbnail');
+    var imageThumbnail = document.getElementById('thumbnail-image');
+    var cropper;
+
+    $(document).on("change", "#book_thumbnail_image", function(e){
+        var files = e.target.files;
+        var done = function (url) {
+            imageThumbnail.src = url;
+            $modalThumbnail.modal('show');
+        };
+        var reader;
+        var file;
+        var url;
+        if (files && files.length > 0) {
+            file = files[0];
+            if (URL) {
+                done(URL.createObjectURL(file));
+            } else if (FileReader) {
+                reader = new FileReader();
+                reader.onload = function (e) {
+                    done(reader.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+    $modalThumbnail.on('shown.bs.modal', function () {
+        cropper = new Cropper(imageThumbnail, {
+            aspectRatio: 1,
+            viewMode: 2,
+            preview: '.preview'
+        });
+    }).on('hidden.bs.modal', function () {
+        cropper.destroy();
+        cropper = null;
+    });
+    $("#crop_thumbnail").click(function(){
+        canvas = cropper.getCroppedCanvas({
+            width: 320,
+            height: 320,
+        });
+        canvas.toBlob(function(blob) {
+            url = URL.createObjectURL(blob);
+            var reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = function() {
+                var base64data = reader.result;
+                $.ajax({
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ route('api.books.upload_thumbnail_image', $book)}}",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        '_token': $('meta[name="_token"]').attr('content'),
+                        'image': base64data
+                    },
+                    success: function(data){
+                        var status = 'error';
+                        if (data.image) {
+                            if ($('#book_thumbnail_image_show').length) {
+                                $('#book_thumbnail_image_show').attr('src', data.image);
+                            } else {
+                                $('#book-thumbnail').append(`<img id="book_thumbnail_image_show" class="img-fluid mt-2" src="${data.image}">`);
+                            }
+                            status = 'success';
+                        }
+
+                        noty({
+                            type: status,
+                            layout: 'bottomRight',
+                            text: data.message,
+                            timeout: 3000
+                        });
+
+                        $modalThumbnail.modal('hide');
+                    },
+                    error : function(data){
+                        var status = 'error';
+                        var errorMessage = data.responseJSON.message;
+                        noty({
+                            type: status,
+                            layout: 'bottomRight',
+                            text: errorMessage,
+                            timeout: false
+                        });
+                    }
+                });
+            }
+        });
+    });
 </script>
 @endpush

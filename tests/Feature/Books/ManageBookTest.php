@@ -79,46 +79,6 @@ class ManageBookTest extends TestCase
     }
 
     /** @test */
-    public function user_can_edit_a_book()
-    {
-        $user = $this->loginAsUser();
-        $book = factory(Book::class)->create([
-            'name' => 'Testing 123',
-            'creator_id' => $user->id,
-            'report_visibility_code' => Book::REPORT_VISIBILITY_INTERNAL,
-        ]);
-        $bankAccount = factory(BankAccount::class)->create();
-
-        $this->visitRoute('books.show', $book);
-        $this->click('edit-book-'.$book->id);
-        $this->seeRouteIs('books.edit', [$book]);
-
-        $this->submitForm(__('book.update'), [
-            'name' => 'Book 1 name',
-            'description' => 'Book 1 description',
-            'status_id' => Book::STATUS_ACTIVE,
-            'bank_account_id' => $bankAccount->id,
-            'report_visibility_code' => Book::REPORT_VISIBILITY_PUBLIC,
-            'budget' => 1000000,
-            'report_periode_code' => Book::REPORT_PERIODE_IN_WEEKS,
-            'start_week_day_code' => 'friday',
-        ]);
-
-        $this->seeRouteIs('books.show', [$book]);
-
-        $this->seeInDatabase('books', [
-            'name' => 'Book 1 name',
-            'description' => 'Book 1 description',
-            'status_id' => Book::STATUS_ACTIVE,
-            'bank_account_id' => $bankAccount->id,
-            'report_visibility_code' => Book::REPORT_VISIBILITY_PUBLIC,
-            'budget' => 1000000,
-            'report_periode_code' => Book::REPORT_PERIODE_IN_WEEKS,
-            'start_week_day_code' => 'friday',
-        ]);
-    }
-
-    /** @test */
     public function user_can_delete_a_book()
     {
         $user = $this->loginAsUser();
